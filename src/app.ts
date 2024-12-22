@@ -4,13 +4,12 @@ import notFound from './app/middlewares/notFound';
 import authRouter from './app/moduels/auth/auth.router';
 import userRouter from './app/moduels/user/user.route';
 
-
 const app: Application = express();
 
 app.use(express.json());
 
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/users', userRouter);
+app.use('/api/auth', authRouter)
+app.use('/api/user', userRouter)
 
 app.use(globalErrorHandler);
 app.use(notFound);

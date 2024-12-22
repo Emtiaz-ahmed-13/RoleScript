@@ -1,14 +1,14 @@
 /* eslint-disable no-useless-escape */
-import type { TErrorSources, TGenericErrorResponse } from "../interface/error";
+import type { TErrorSources, TGenericErrorResponse } from '../interface/error';
 
 const handleDuplicateError = (err: Error): TGenericErrorResponse => {
   // Extract value within double quotes using regex
   const match = err.message.match(/\"([^\"]*)\"/);
-  const extractedMessage: string = (match && match[1]) || "Unknown";
+  const extractedMessage: string = (match && match[1]) || 'Unknown';
 
   const errorSources: TErrorSources = [
     {
-      path: "",
+      path: '',
       message: `${extractedMessage} is already exists`,
     },
   ];
@@ -17,7 +17,7 @@ const handleDuplicateError = (err: Error): TGenericErrorResponse => {
 
   return {
     statusCode,
-    message: "Invalid ID",
+    message: 'Invalid ID',
     errorSources,
   };
 };
