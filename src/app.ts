@@ -1,9 +1,18 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application } from 'express';
+import globalErrorHandler from './app/middlewares/globalErrorhandler';
+import notFound from './app/middlewares/notFound';
+import authRouter from './app/moduels/auth/auth.router';
+import userRouter from './app/moduels/user/user.route';
+
 
 const app: Application = express();
 
-app.get('/', (req, res) => {
-  res.send('<h1>The role Script API...!!!</h1>');
-});
+app.use(express.json());
+
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/users', userRouter);
+
+app.use(globalErrorHandler);
+app.use(notFound);
 
 export default app;
