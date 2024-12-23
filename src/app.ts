@@ -14,16 +14,14 @@ app.use(cors());
 app.use('/api/auth', authRouter);
 app.use('/api/blogs', blogRouter);
 
-// Home route
-const getAController = (req: Request, res: Response) => {
+app.get('/', (req: Request, res: Response) => {
+  console.log('Home route hit');
   res.send({
     success: true,
     message: 'Welcome To blog.',
   });
-};
+});
 
-// Define the root route
-app.get('/', getAController);
 
 // Global error handler and not found handler
 app.use(globalErrorHandler);
