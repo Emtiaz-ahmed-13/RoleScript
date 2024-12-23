@@ -2,7 +2,6 @@ import { Router } from 'express';
 import authRouter from '../moduels/auth/auth.router';
 import blogRouter from '../moduels/blog/blog.route';
 import adminRouter from '../moduels/admin/admin.router';
-import path from 'path';
 import userRouter from '../moduels/user/user.route';
 
 const router = Router();
