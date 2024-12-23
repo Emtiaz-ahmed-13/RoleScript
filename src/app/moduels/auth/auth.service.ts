@@ -1,64 +1,54 @@
+import { Types } from 'mongoose';
 import { IUser } from '../user/user.interface';
 import User from '../user/user.model';
+import AppError from '../../errors/AppError';
+import { StatusCodes } from 'http-status-codes';
 import bcrypt from 'bcrypt';
+import config from '../../config';
 import jwt from 'jsonwebtoken';
 
-const register = async (payload: IUser) => {
-  // Check if the user already exists by email
-  const existingUser = await User.findOne({ email: payload.email });
-  if (existingUser) {
-    throw new Error('User already exists');
-  }
+type UserPayload = {
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+};
+const register = async (payload: IUser): Promise<UserPayload> => {
+  const result = await User.create(payload);
 
-  // Hash the password before saving it
-  const hashedPassword = await bcrypt.hash(payload.password, 10);
-
-  // Create the user payload with hashed password
-  const userPayload = {
-    ...payload,
-    password: hashedPassword, // Use the hashed password
-    role: payload.role || 'user', // Default role to 'user' if not provided
-  };
-
-  // Create the user in the database
-  const result = await User.create(userPayload);
   return result;
 };
 
 const login = async (payload: { email: string; password: string }) => {
-  // checking if the user is exist
   const user = await User.findOne({ email: payload?.email }).select(
     '+password',
   );
 
   if (!user) {
-    throw new Error('This user is not found !');
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
-  // checking if the user is inactive
-  const userStatus = user?.userStatus;
-
-  if (userStatus === 'inactive') {
-    throw new Error('This user is blocked ! !');
-  }
-
-  //checking if the password is correct
   const isPasswordMatched = await bcrypt.compare(
     payload?.password,
     user?.password,
   );
 
   if (!isPasswordMatched) {
-    throw new Error('Wrong Password!!! Tell me who are you? 😈');
+    throw new AppError(StatusCodes.FORBIDDEN, 'Wrong Password !!');
   }
 
-  //create token and sent to the  client
+  if (user?.isBlocked) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'This user is blocked !!');
+  }
+
   const jwtPayload = {
-    email: user?.email,
-    role: user?.role,
+    email: user.email,
+    role: user.role,
+    _id: user._id,
   };
 
-  const token = jwt.sign(jwtPayload, 'secret', { expiresIn: '1d' });
+  const token = jwt.sign(jwtPayload, config.jwt_access_secret as string, {
+    expiresIn: config.jwt_access_expires_in as string,
+  });
 
   return { token, user };
 };

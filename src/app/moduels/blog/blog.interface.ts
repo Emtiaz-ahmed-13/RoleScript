@@ -1,7 +1,7 @@
-import { IUser } from '../user/user.interface';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Types } from 'mongoose';
 
 export interface IBlog {
   title: string;
   content: string;
-  author: IUser | string; // Could be a reference to User (ObjectId) or the User object
 }

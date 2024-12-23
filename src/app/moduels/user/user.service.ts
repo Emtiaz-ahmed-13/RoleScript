@@ -31,10 +31,16 @@ const deleteUser = async (id: string) => {
   return result;
 };
 
+const getAllUser = async () => {
+  const users = await User.find();
+  return users;
+};
+
 export const userService = {
   createUser,
   getUser,
   getSingleUser,
   updateUser,
   deleteUser,
+  getAllUser,
 };

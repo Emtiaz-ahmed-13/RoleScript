@@ -1,46 +1,46 @@
-import { NextFunction, Request, Response } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-
-import catchAsync from '../utils/catchAsync';
-import { TUserRole } from '../moduels/user/user.interface';
+import { StatusCodes } from 'http-status-codes';
+import AppError from '../errors/AppError';
 import User from '../moduels/user/user.model';
+import catchAsync from '../utils/catchAsync';
+import { NextFunction, Request, Response } from 'express';
+import config from '../config';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+import { TUserRole } from '../moduels/auth/auth.validation';
 
 const auth = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization;
-    // checking if the token is missing
-    if (!token) {
-      throw new Error('You are not authorized!');
+    const getTokenWithBearer = req.headers?.authorization;
+    if (!getTokenWithBearer) {
+      throw new AppError(
+        StatusCodes.UNAUTHORIZED,
+        `You are not authorized to access this route `,
+      );
     }
+    const token = getTokenWithBearer.split(' ')[1] || getTokenWithBearer;
 
-    // checking if the given token is valid
-    const decoded = jwt.verify(token, 'secret') as JwtPayload;
+    const decoded = jwt.verify(
+      token,
+      config.jwt_access_secret as string,
+    ) as JwtPayload;
 
-    console.log({ decoded });
-
-    const { role, email } = decoded;
-
-    // checking if the user is exist
+    const { email, role } = decoded;
     const user = await User.findOne({ email });
-
     if (!user) {
-      throw new Error('This user is not found !');
+      throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
 
-    // checking if the user is inactive
-    const userStatus = user?.userStatus;
-
-    if (userStatus === 'inactive') {
-      throw new Error('This user is blocked ! !');
+    if (user.isBlocked) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'This user is blocked');
     }
-
-    if (requiredRoles && !requiredRoles.includes(role)) {
-      throw new Error('You are not authorized');
+    if (requiredRoles.length > 0 && !requiredRoles.includes(role)) {
+      throw new AppError(
+        StatusCodes.FORBIDDEN,
+        'You are not allowed to access this route',
+      );
     }
+    req.user = decoded;
 
-    req.user = decoded as JwtPayload;
     next();
   });
 };
-
 export default auth;

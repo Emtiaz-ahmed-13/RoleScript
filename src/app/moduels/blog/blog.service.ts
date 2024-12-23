@@ -1,46 +1,108 @@
-import { IUser } from '../user/user.interface';
-import { IBlog } from './blog.interface';
 import Blog from './blog.model';
+import AppError from '../../errors/AppError';
+import { JwtPayload } from 'jsonwebtoken';
+import { IBlog } from './blog.interface';
+import { StatusCodes } from 'http-status-codes';
+import QueryBuilder from '../../builder/Querybuilder';
 
-const createBlog = async ({
-  title,
-  content,
-  userId,
-}: {
-  title: string;
-  content: string;
-  userId: string;
-}): Promise<IBlog> => {
-  const newBlog = new Blog({
-    title,
-    content,
-    author: userId, // User ID as reference to the author field
-  });
+const findBlogAndCheckPermissions = async (
+  blogId: string,
+  loggedUser: JwtPayload,
+) => {
+  const blog = await Blog.findById(blogId).populate<{
+    author: { email: string; role: string };
+  }>('author');
 
-  const savedBlog = await newBlog.save();
-  return savedBlog;
+  if (!blog) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Blog not found');
+  }
+
+  if (blog.author.email !== loggedUser.email) {
+    throw new AppError(
+      StatusCodes.UNAUTHORIZED,
+      'You are not authorized to perform this action on the blog',
+    );
+  }
+
+  if (!blog.isPublished) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'This blog has already been unpublished.',
+    );
+  }
+
+  return blog;
+};
+
+const populateAuthor = async (blog: any) => blog.populate('author');
+
+const createBlog = async (
+  authorPayload: JwtPayload,
+  payload: IBlog,
+): Promise<IBlog> => {
+  const author = authorPayload._id;
+
+  const newBlog = await Blog.create({ ...payload, author });
+  const result = await populateAuthor(newBlog);
+
+  return result;
 };
 const updateBlog = async (
-  id: string,
-  payload: { title: string; content: string; author: IUser },
-) => {
-  const result = await Blog.findByIdAndUpdate(id, payload, { new: true });
+  blogId: string,
+  payload: IBlog,
+  loggedUser: JwtPayload,
+): Promise<IBlog> => {
+  const updatedBlog = await Blog.findByIdAndUpdate(blogId, payload, {
+    new: true,
+  });
+
+  if (!updatedBlog) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Blog could not be updated');
+  }
+
+  const result = await populateAuthor(updatedBlog);
+
   return result;
 };
 
-const deleteBlog = async (id: string, userId: string) => {
-  const result = await Blog.findOneAndDelete({ _id: id, author: userId });
+const deleteBlog = async (
+  blogId: string,
+  loggedUser: JwtPayload,
+): Promise<boolean> => {
+  await findBlogAndCheckPermissions(blogId, loggedUser);
+
+  const result = await Blog.findByIdAndUpdate(
+    blogId,
+    { isPublished: false },
+    { new: true },
+  );
+
+  return result !== null;
+};
+
+const getAllBlogs = async (
+  query: Record<string, unknown>,
+): Promise<{ _id: string; title: string; content: string; author: any }[]> => {
+  const searchableFields = ['title', 'content'];
+  const blogs = new QueryBuilder(
+    Blog.find({ isPublished: true }).populate('author'),
+    query,
+  )
+    .search(searchableFields)
+    .filter()
+    .sort();
+
+  const result = (await blogs.modelQuery
+    .select('_id title content author')
+    .lean()) as unknown as {
+    _id: string;
+    title: string;
+    content: string;
+    author: any;
+  }[];
+
   return result;
 };
-
-const getAllBlogs = async (query: any, sortBy: string, sortOrder: string) => {
-  // Assuming you're using a MongoDB model like Blog
-  const blogs = await Blog.find(query)
-    .sort({ [sortBy]: sortOrder === 'asc' ? 1 : -1 })
-    .exec();
-  return blogs;
-};
-
 export const blogService = {
   createBlog,
   updateBlog,

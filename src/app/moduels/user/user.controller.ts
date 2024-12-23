@@ -1,10 +1,7 @@
-// req and res manage
-
+import StatusCodes from 'http-status-codes';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendRespone';
-
 import { userService } from './user.service';
-import status from 'http-status';
 
 const createUser = catchAsync(async (req, res) => {
   const payload = req.body;
@@ -12,10 +9,10 @@ const createUser = catchAsync(async (req, res) => {
   const result = await userService.createUser(payload);
 
   sendResponse(res, {
-    statusCode: status.CREATED,
+    statusCode: StatusCodes.CREATED,
     message: 'User created successfully',
     data: result,
-    status: false,
+    success: true,
   });
 });
 
@@ -23,49 +20,60 @@ const getUser = catchAsync(async (req, res) => {
   const result = await userService.getUser();
 
   sendResponse(res, {
-    statusCode: status.OK,
-    message: 'Users getting successfully',
+    statusCode: StatusCodes.OK,
+    message: 'Users retrieved successfully',
     data: result,
-    status: false,
+    success: true,
   });
 });
 
 const getSingleUser = catchAsync(async (req, res) => {
-  console.log(req.params);
   const userId = req.params.userId;
 
   const result = await userService.getSingleUser(userId);
 
   sendResponse(res, {
-    statusCode: status.OK,
-    message: 'User getting successfully',
+    statusCode: StatusCodes.OK,
+    message: 'User retrieved successfully',
     data: result,
-    status: true,
+    success: true,
   });
 });
 
 const updateUser = catchAsync(async (req, res) => {
   const userId = req.params.userId;
   const body = req.body;
+
   const result = await userService.updateUser(userId, body);
 
   sendResponse(res, {
-    statusCode: status.OK,
+    statusCode: StatusCodes.OK,
     message: 'User updated successfully',
     data: result,
-    status: true,
+    success: true,
   });
 });
 
 const deleteUser = catchAsync(async (req, res) => {
   const userId = req.params.userId;
+
   await userService.deleteUser(userId);
 
   sendResponse(res, {
-    statusCode: status.OK,
-    message: 'user deleted successfully',
-    data: {},
-    status: true,
+    statusCode: StatusCodes.OK,
+    message: 'User deleted successfully',
+    data: null,
+    success: true,
+  });
+});
+const getAllUser = catchAsync(async (req, res) => {
+  const result = await userService.getAllUser();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Users retrieved successfully',
+    data: result,
+    success: true,
   });
 });
 
@@ -75,4 +83,5 @@ export const userController = {
   getSingleUser,
   updateUser,
   deleteUser,
+  getAllUser,
 };
