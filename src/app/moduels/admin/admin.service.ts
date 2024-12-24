@@ -7,22 +7,16 @@ const blockUser = async (userId: string) => {
   const checkUserId = await User.findById(userId);
 
   if (!checkUserId) {
-    throw new AppError(StatusCodes.NOT_FOUND, 'user not found');
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   } else if (checkUserId.isBlocked) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'User already blocked');
   }
-  const updateBlog = await User.findByIdAndUpdate(
-    userId,
-    { isBlocked: true },
-    {
-      new: true,
-    },
-  );
+  const updateBlog = await User.findByIdAndUpdate(userId, { isBlocked: true }, { new: true });
 
   if (!updateBlog) {
     throw new AppError(
       StatusCodes.BAD_REQUEST,
-      'user not blocked! try again later',
+      'User not blocked! try again later',
     );
   }
 };
@@ -35,13 +29,7 @@ const deleteBlog = async (userId: string) => {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Blog already deleted');
   }
 
-  const updateBlog = await Blog.findByIdAndUpdate(
-    userId,
-    { isPublished: false },
-    {
-      new: true,
-    },
-  );
+  const updateBlog = await Blog.findByIdAndUpdate(userId, { isPublished: false }, { new: true });
 
   if (!updateBlog) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Blog not deleted');

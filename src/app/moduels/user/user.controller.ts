@@ -39,6 +39,16 @@ const getSingleUser = catchAsync(async (req, res) => {
     success: true,
   });
 });
+const getAllUser = catchAsync(async (req, res) => {
+  const result = await userService.getAllUser();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    message: 'Users retrieved successfully',
+    data: result,
+    success: true,
+  });
+});
 
 const updateUser = catchAsync(async (req, res) => {
   const userId = req.params.userId;
@@ -54,6 +64,7 @@ const updateUser = catchAsync(async (req, res) => {
   });
 });
 
+
 const deleteUser = catchAsync(async (req, res) => {
   const userId = req.params.userId;
 
@@ -66,16 +77,7 @@ const deleteUser = catchAsync(async (req, res) => {
     success: true,
   });
 });
-const getAllUser = catchAsync(async (req, res) => {
-  const result = await userService.getAllUser();
 
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    message: 'Users retrieved successfully',
-    data: result,
-    success: true,
-  });
-});
 
 export const userController = {
   createUser,

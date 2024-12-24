@@ -4,16 +4,16 @@ import globalErrorHandler from './app/middlewares/globalErrorhandler';
 import notFound from './app/middlewares/notFound';
 import authRouter from './app/moduels/auth/auth.router';
 import blogRouter from './app/moduels/blog/blog.route';
+import adminRouter from './app/moduels/admin/admin.router';
 
 const app: Application = express();
 
 app.use(express.json());
 app.use(cors());
 
-// Register the routes directly with the app instance
 app.use('/api/auth', authRouter);
 app.use('/api/blogs', blogRouter);
-
+app.use('/api/admin', adminRouter);
 app.get('/', (req: Request, res: Response) => {
   console.log('Home route hit');
   res.send({
@@ -22,8 +22,6 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-
-// Global error handler and not found handler
 app.use(globalErrorHandler);
 app.use('*', notFound);
 

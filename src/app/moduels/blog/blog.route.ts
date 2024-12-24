@@ -12,11 +12,6 @@ blogRouter.get('/', blogController.getAllBlogs);
 
 blogRouter.delete('/:id', auth(), blogController.deleteBlog);
 
-blogRouter.patch(
-  '/:id',
-  auth('user', 'admin'),
-  validateRequest(blogValidation.blogValidationSchema),
-  blogController.updateBlog,
-);
+blogRouter.patch('/:id', auth('user', 'admin'), validateRequest(blogValidation.blogValidationSchema), blogController.updateBlog);
 
 export default blogRouter;
